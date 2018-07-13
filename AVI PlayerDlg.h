@@ -7,7 +7,8 @@
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
-
+using namespace std;
+#include <vector>
 /////////////////////////////////////////////////////////////////////////////
 // CAVIPlayerDlg dialog
 
@@ -22,7 +23,13 @@ public:
 	enum { IDD = IDD_AVIPLAYER_DIALOG };
 	CButton	m_Play;
 	CButton	m_Pause;
-	CString	m_Path;
+	CButton m_Next;
+	CString	m_FolderPath;
+	CString m_FilePath;
+	//CArray m_FileNames<CString, &CString>;
+	vector<string> m_FileNames;
+	int m_position;
+	
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -43,6 +50,7 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnPlay();
 	afx_msg void OnPause();
+	afx_msg void OnNext();
 	virtual void OnCancel();
 	afx_msg void OnStop();
 	afx_msg void OnBrowse();

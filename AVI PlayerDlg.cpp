@@ -64,7 +64,7 @@ CAVIPlayerDlg::CAVIPlayerDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CAVIPlayerDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CAVIPlayerDlg)
-	m_Path = _T("");
+	m_FilePath = _T("");
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -76,7 +76,8 @@ void CAVIPlayerDlg::DoDataExchange(CDataExchange* pDX)
 	//{{AFX_DATA_MAP(CAVIPlayerDlg)
 	DDX_Control(pDX, IDC_PLAY, m_Play);
 	DDX_Control(pDX, IDC_PAUSE, m_Pause);
-	DDX_Text(pDX, IDC_PATH, m_Path);
+	DDX_Control(pDX, IDC_NEXT, m_Next);
+	DDX_Text(pDX, IDC_PATH, m_FilePath);
 	//}}AFX_DATA_MAP
 }
 
@@ -87,6 +88,7 @@ BEGIN_MESSAGE_MAP(CAVIPlayerDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_PLAY, OnPlay)
 	ON_BN_CLICKED(IDC_PAUSE, OnPause)
+	ON_BN_CLICKED(IDC_NEXT, OnNext)
 	ON_BN_CLICKED(IDC_STOP, OnStop)
 	ON_BN_CLICKED(IDC_BROWSE, OnBrowse)
 	//}}AFX_MSG_MAP
@@ -124,6 +126,7 @@ BOOL CAVIPlayerDlg::OnInitDialog()
 	
 	// TODO: Add extra initialization here
 	m_Video = NULL;
+//	OnBrowse();
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -184,16 +187,47 @@ void CAVIPlayerDlg::OnPlay()
 	{
 		m_Video = MCIWndCreate(this->GetSafeHwnd(),
 		  AfxGetInstanceHandle(),
-		  WS_CHILD | WS_VISIBLE|MCIWNDF_NOMENU,m_Path);
+		  WS_CHILD | WS_VISIBLE|MCIWNDF_NOMENU|MCIWNDF_SHOWNAME,
+		  m_FilePath);
 		
 	}
 	else
 	{
 		MCIWndHome(m_Video);
 	}
+	MCIWndPlayTo(m_Video, 60000);
+	OnStop();
+	
+
+	//play next mp3 that is tarzuma
+	m_position++;
+	if(m_FileNames.size()>m_position)
+		m_FilePath= m_FolderPath + m_FileNames.at(m_position).c_str();
+	else
+		m_Next.EnableWindow(false);//for end of list diable next button
+	
+	m_Video = MCIWndCreate(this->GetSafeHwnd(),
+		  AfxGetInstanceHandle(),
+		  WS_CHILD | WS_VISIBLE|MCIWNDF_NOMENU|MCIWNDF_SHOWNAME,
+		  m_FilePath);
+
 	MCIWndPlay(m_Video);
+
 	Pause = FALSE;
+	m_Video = NULL;
 	m_Play.EnableWindow(FALSE);
+	
+}
+void CAVIPlayerDlg::OnNext()
+{
+	OnStop();
+	m_position++;
+	if(m_FileNames.size()>m_position)
+		m_FilePath= m_FolderPath + m_FileNames.at(m_position).c_str();
+	else
+		m_Next.EnableWindow(false);//for end of list diable next button
+	UpdateData(FALSE);
+	OnPlay();
 	
 }
 
@@ -232,7 +266,7 @@ void CAVIPlayerDlg::OnStop()
 	if(m_Video !=NULL)
 	{
 		MCIWndDestroy(m_Video);
-	
+		UpdateData(false);
 	}
 	m_Play.EnableWindow(TRUE);
 	
@@ -241,16 +275,45 @@ void CAVIPlayerDlg::OnStop()
 void CAVIPlayerDlg::OnBrowse() 
 {
 	// TODO: Add your control notification handler code here
+	CString fileName, fileExt;
 	m_Video = NULL;
 	if(m_Video == NULL)
 	{
 		CFileDialog avi(TRUE,NULL,NULL,OFN_HIDEREADONLY,"MP3 Files (*.mp3)|*.mp3|AVI Files(*.avi)|*.avi|");
 		if(avi.DoModal() == IDOK)
 		{
-			m_Path = avi.GetPathName();
-			UpdateData(FALSE);
-			
+			m_FilePath = avi.GetPathName();
+			fileName = avi.GetFileName();
+			fileExt = avi.GetFileExt();
+			m_FolderPath =  m_FilePath.Left(m_FilePath.GetLength() - avi.GetFileName().GetLength());
+			UpdateData(FALSE);			
 		}
 	}
-	
+	if(!m_FilePath.IsEmpty())
+	{	
+		
+		//string search_path = folder + "/*.*";
+		CString search_path = m_FolderPath +  "/*.mp3";
+		int position = -1;
+
+		WIN32_FIND_DATA fd; 
+		HANDLE hFind = ::FindFirstFile(search_path, &fd); 
+		if(hFind != INVALID_HANDLE_VALUE) { 
+			do { 
+				// read all (real) files in current folder
+				// , delete '!' read other 2 default folder . and ..
+				if(! (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ) {
+					m_FileNames.push_back(fd.cFileName);
+					position++;
+					if(strcmpi(fd.cFileName, fileName)==0)
+						m_position = position;
+				}
+			}while(::FindNextFile(hFind, &fd)); 
+			::FindClose(hFind); 
+		} 
+	}
+	OnPlay();
+    
 }
+
+

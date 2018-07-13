@@ -1,5 +1,5 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
+// Microsoft Visual C++ generated include file.
 // Used by AVI Player.rc
 //
 #define IDM_ABOUTBOX                    0x0010
@@ -11,6 +11,7 @@
 #define IDC_PLAY                        1000
 #define IDC_STOP                        1001
 #define IDC_PAUSE                       1002
+#define IDC_NEXT                        1003
 #define IDC_PATH                        1004
 #define IDC_BROWSE                      1005
 
@@ -18,9 +19,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        129
+#define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1006
+#define _APS_NEXT_CONTROL_VALUE         1010
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
